@@ -1,37 +1,25 @@
 <?php
 //Protocol Corporation Ltda.
-//https://github.com/SantuarioMisericordiaRJ/StbModuleDiarioSantaFaustina
-//2023.04.06.00
+//https://github.com/ProtocolLive/StbModuleForward
 
+namespace ProtocolLive\StbModules;
+use ProtocolLive\SimpleTelegramBot\StbInterfaces\StbModuleInterface;
 use ProtocolLive\SimpleTelegramBot\StbObjects\{
   StbAdminModules,
   StbDatabase,
-  StbDbListeners,
   StbModuleHelper,
-  StbModuleInterface
 };
-use ProtocolLive\TelegramBotLibrary\TelegramBotLibrary;
-use ProtocolLive\TelegramBotLibrary\TgObjects\{
-  TgCallback,
-  TgPhoto,
-  TgVideo
-};
+use ProtocolLive\TelegramBotLibrary\TgInterfaces\TgForwadableInterface;
+use ProtocolLive\TelegramBotLibrary\TgObjects\TgCallback;
+use ProtocolLive\TelegramBotLibrary\TgObjects\TgObject;
 
+/**
+ * @version 2023.05.24.00
+ */
 class Forward
 extends StbModuleHelper
 implements StbModuleInterface{
-  /**
-   * @global StbDatabase $Db
-   * @global TelegramBotLibrary $Bot
-   */
-
-  private static function Encaminhar(
-    int $Chat,
-    int $Id
-  ){
-    global $Bot;
-    $Bot->MessageForward(Admin, $Chat, $Id);
-  }
+  public static function Command():void{}
 
   public static function Install():void{
     /**
@@ -39,47 +27,30 @@ implements StbModuleInterface{
      */
     global $Db, $Webhook, $Bot;
     DebugTrace();
-    $pdo = $Db->GetCustom();
-
     parent::InstallHelper(
-      $pdo,
-      [],
-      false
+      __CLASS__,
+      Commit: false
     );
-    if($Db->ListenerAdd(StbDbListeners::Photo, __CLASS__) === false):
-      parent::MsgError($pdo);
+    if($Db->ListenerAdd(TgObject::class, __CLASS__) === false):
+      parent::MsgError();
       return;
     endif;
-    if($Db->ListenerAdd(StbDbListeners::Video, __CLASS__) === false):
-      parent::MsgError($pdo);
-      return;
-    endif;
-  
     $Bot->CallbackAnswer(
       $Webhook->Id,
       '✅ Instalação concluída'
     );
-    parent::InstallHelper2($pdo);
+    parent::InstallHelper2();
   }
 
-  public static function Listener_Photo(){
-    /**
-     * @var TgPhoto $Webhook
-     */
-    global $Webhook;
-    self::Encaminhar(
+  public static function Listener():void{
+    global $Webhook, $Bot;
+    if($Webhook instanceof TgForwadableInterface === false):
+      return;
+    endif;
+    $Bot->MessageForward(
       $Webhook->Data->Chat->Id,
-      $Webhook->Data->Id
-    );
-  }
-
-  public static function Listener_Video(){
-    /**
-     * @var TgVideo $Webhook
-     */
-    self::Encaminhar(
-      $Webhook->Data->Chat->Id,
-      $Webhook->Data->Id
+      $Webhook->Data->Id,
+      Admin
     );
   }
 
@@ -89,12 +60,7 @@ implements StbModuleInterface{
      */
     global $Db, $Webhook, $Bot;
     DebugTrace();
-    $pdo = $Db->GetCustom();
-    $pdo->exec('drop table ' . parent::ModTable('inscritos'));
-    parent::UninstallHelper(
-      $pdo,
-      []
-    );
+    $Db->ModuleUninstall(__CLASS__);
     $Bot->CallbackAnswer(
       $Webhook->Id,
       '✅ Desinstalação concluída'
