@@ -14,7 +14,7 @@ use ProtocolLive\TelegramBotLibrary\TgObjects\TgCallback;
 use ProtocolLive\TelegramBotLibrary\TgObjects\TgObject;
 
 /**
- * @version 2023.05.24.00
+ * @version 2023.05.29.00
  */
 class Forward
 extends StbModuleHelper
@@ -58,7 +58,7 @@ implements StbModuleInterface{
     /**
      * @var TgCallback $Webhook
      */
-    global $Db, $Webhook, $Bot;
+    global $Webhook, $Bot, $Db;
     DebugTrace();
     $Db->ModuleUninstall(__CLASS__);
     $Bot->CallbackAnswer(
